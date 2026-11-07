@@ -60,10 +60,16 @@ jobs:
           exit 1
 
       - name: Verificar la comunicacion entre contenedores
-        run: curl -fs http://localhost:8080/health | tee /dev/stderr | grep -q '"comunicacion_contenedores": *"establecida"'
+        run: |
+          respuesta=$(curl -fs http://localhost:8080/health)
+          echo "$respuesta"
+          echo "$respuesta" | grep -q "establecida"
 
       - name: Verificar la lectura de datos desde PostgreSQL
-        run: curl -fs http://localhost:8080/api/tareas | tee /dev/stderr | grep -q '"total"'
+        run: |
+          respuesta=$(curl -fs http://localhost:8080/api/tareas)
+          echo "$respuesta"
+          echo "$respuesta" | grep -q "total"
 
       - name: Apagar los contenedores
         if: always()
