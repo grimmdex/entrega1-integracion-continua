@@ -1,0 +1,33 @@
+$ curl -s http://localhost:8080/health
+{
+    "comunicacion_contenedores": "establecida",
+    "estado": "ok",
+    "host_base_datos": "db",
+    "motor": "PostgreSQL 16.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit"
+}
+
+$ curl -s http://localhost:8080/api/tareas   # primeras entradas
+{
+    "total": 6,
+    "tareas": [
+        { "id": 1, "titulo": "Crear repositorio en GitHub",
+          "estado": "completada", "responsable": "Equipo" },
+        { "id": 2, "titulo": "Construir contenedor de aplicacion",
+          "estado": "completada", "responsable": "Equipo" },
+        { "id": 3, "titulo": "Construir contenedor de base de datos",
+          "estado": "completada", "responsable": "Equipo" },
+        ...
+    ]
+}
+
+$ docker compose exec db psql -U ciuser -d tareasdb -c "SELECT id, titulo, estado FROM tareas;"
+ id |                  titulo                   |   estado    
+----+-------------------------------------------+-------------
+  1 | Crear repositorio en GitHub               | completada
+  2 | Construir contenedor de aplicacion        | completada
+  3 | Construir contenedor de base de datos     | completada
+  4 | Verificar comunicacion entre contenedores | en progreso
+  5 | Preparar entrega de la semana 3           | pendiente
+  6 | Entregar evidencias de la Semana 3        | pendiente
+(6 rows)
+

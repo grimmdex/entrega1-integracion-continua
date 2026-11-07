@@ -1,0 +1,24 @@
+$ docker compose exec web python -m pytest tests/ -v
+============================= test session starts ==============================
+platform linux -- Python 3.12.16, pytest-8.2.2, pluggy-1.7.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /usr/src/app
+collecting ... collected 3 items
+tests/test_app.py::test_endpoint_inicio_responde PASSED                  [ 33%]
+tests/test_app.py::test_host_base_datos_es_el_servicio_docker PASSED     [ 66%]
+tests/test_app.py::test_crear_tarea_sin_titulo_devuelve_400 PASSED       [100%]
+============================== 3 passed in 0.08s ===============================
+
+$ gh run list --limit 1
+  completed  success  Corregir sintaxis YAML del workflow de integracion continua
+
+$ gh run view --json jobs   # pasos del pipeline en GitHub Actions
+  [success] Pruebas unitarias
+  [success] Construir y validar los dos contenedores
+     success  Descargar el codigo
+     success  Construir las imagenes
+     success  Levantar los contenedores
+     success  Esperar a que el servicio web responda
+     success  Verificar la comunicacion entre contenedores
+     success  Verificar la lectura de datos desde PostgreSQL
+     success  Apagar los contenedores

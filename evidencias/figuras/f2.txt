@@ -1,0 +1,19 @@
+$ docker compose up --build -d
+Image entrega1-integracion-continua-web Built 
+Network entrega1-integracion-continua_red-ci Creating 
+Network entrega1-integracion-continua_red-ci Created 
+Container ci_db Creating 
+Container ci_db Created 
+Container ci_web Creating 
+Container ci_web Created 
+Container ci_db Starting 
+Container ci_db Started 
+Container ci_db Waiting 
+Container ci_db Healthy 
+Container ci_web Starting 
+Container ci_web Started 
+
+$ docker compose ps
+NAME      IMAGE                               COMMAND                  SERVICE   CREATED          STATUS                    PORTS
+ci_db     postgres:16-alpine                  "docker-entrypoint.s…"   db        11 seconds ago   Up 11 seconds (healthy)   5432/tcp
+ci_web    entrega1-integracion-continua-web   "gunicorn --bind 0.0…"   web       11 seconds ago   Up 5 seconds (healthy)    0.0.0.0:8080->5000/tcp, [::]:8080->5000/tcp

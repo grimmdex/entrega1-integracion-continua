@@ -1,0 +1,18 @@
+$ docker compose logs --tail=8 db
+ci_db  | PostgreSQL Database directory appears to contain a database; Skipping initialization
+ci_db  | 
+ci_db  | 2026-11-07 16:14:32.276 UTC [1] LOG:  starting PostgreSQL 16.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+ci_db  | 2026-11-07 16:14:32.276 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+ci_db  | 2026-11-07 16:14:32.276 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+ci_db  | 2026-11-07 16:14:32.278 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+ci_db  | 2026-11-07 16:14:32.279 UTC [28] LOG:  database system was shut down at 2026-11-07 16:14:31 UTC
+ci_db  | 2026-11-07 16:14:32.282 UTC [1] LOG:  database system is ready to accept connections
+
+$ docker compose logs --tail=8 web
+ci_web  | [2026-11-07 16:14:38 +0000] [1] [INFO] Starting gunicorn 22.0.0
+ci_web  | [2026-11-07 16:14:38 +0000] [1] [INFO] Listening at: http://0.0.0.0:5000 (1)
+ci_web  | [2026-11-07 16:14:38 +0000] [1] [INFO] Using worker: sync
+ci_web  | [2026-11-07 16:14:38 +0000] [7] [INFO] Booting worker with pid: 7
+ci_web  | [2026-11-07 16:14:38 +0000] [8] [INFO] Booting worker with pid: 8
+ci_web  | 127.0.0.1 - - [07/Nov/2026:16:14:42 +0000] "GET /health HTTP/1.1" 200 186 "-" "curl/8.14.1"
+ci_web  | 172.18.0.1 - - [07/Nov/2026:16:14:43 +0000] "GET /health HTTP/1.1" 200 186 "-" "curl/8.7.1"

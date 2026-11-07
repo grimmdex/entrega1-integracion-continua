@@ -1,0 +1,12 @@
+$ docker network inspect entrega1-integracion-continua_red-ci
+  ci_db -> 172.18.0.2/16
+  ci_web -> 172.18.0.3/16
+
+$ docker compose exec web getent hosts db
+172.18.0.2      db
+
+$ docker compose exec web python   # socket TCP hacia db:5432
+conexion TCP establecida con db:5432 desde el contenedor web
+
+$ nc -z -w 2 localhost 5432        # desde la maquina anfitriona
+conexion rechazada: el puerto 5432 no esta publicado

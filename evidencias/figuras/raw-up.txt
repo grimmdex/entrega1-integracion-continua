@@ -1,0 +1,69 @@
+time="2026-11-07T11:14:32-05:00" level=warning msg="Docker Compose requires buildx plugin to be installed"
+ Image entrega1-integracion-continua-web Building 
+ Image entrega1-integracion-continua-web Building 
+Sending build context to Docker daemon  3.105kB
+Step 1/16 : FROM python:3.12-slim
+ ---> 4840d514c583
+Step 2/16 : LABEL proyecto="Gestor de Tareas - Integracion Continua"
+ ---> Using cache
+ ---> 8d05c2e820c3
+Step 3/16 : LABEL institucion="Politecnico Grancolombiano"
+ ---> Using cache
+ ---> b2ede3a38adf
+Step 4/16 : LABEL contenedor="web"
+ ---> Using cache
+ ---> 964baeebb20d
+Step 5/16 : ENV PYTHONDONTWRITEBYTECODE=1     PYTHONUNBUFFERED=1
+ ---> Using cache
+ ---> 4cdaf9225369
+Step 6/16 : WORKDIR /usr/src/app
+ ---> Using cache
+ ---> 916adb71e89d
+Step 7/16 : RUN apt-get update     && apt-get install -y --no-install-recommends curl libpq5     && rm -rf /var/lib/apt/lists/*
+ ---> Using cache
+ ---> de03695f0dd1
+Step 8/16 : COPY requirements.txt .
+ ---> Using cache
+ ---> 84b0cf4f2e7d
+Step 9/16 : RUN pip install --no-cache-dir --upgrade pip     && pip install --no-cache-dir -r requirements.txt
+ ---> Using cache
+ ---> 92db10cb536c
+Step 10/16 : COPY . .
+ ---> Using cache
+ ---> 16009e34db68
+Step 11/16 : RUN useradd --create-home appuser && chown -R appuser:appuser /usr/src/app
+ ---> Using cache
+ ---> 9116e89b0d89
+Step 12/16 : USER appuser
+ ---> Using cache
+ ---> 9b38ba4f2b92
+Step 13/16 : EXPOSE 5000
+ ---> Using cache
+ ---> 85d626fb6c43
+Step 14/16 : HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5     CMD curl -f http://localhost:5000/health || exit 1
+ ---> Using cache
+ ---> 7a8ea1831fdb
+Step 15/16 : CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--access-logfile", "-", "app:app"]
+ ---> Using cache
+ ---> 5f0e190a4b45
+Step 16/16 : LABEL com.docker.compose.image.builder=classic
+ ---> Using cache
+ ---> 808a0af0f161
+Successfully built 808a0af0f161
+Successfully tagged entrega1-integracion-continua-web:latest
+ Image entrega1-integracion-continua-web Built 
+ Image entrega1-integracion-continua-web Built 
+ Network entrega1-integracion-continua_red-ci Creating 
+ Network entrega1-integracion-continua_red-ci Creating 
+ Network entrega1-integracion-continua_red-ci Created 
+ Network entrega1-integracion-continua_red-ci Created 
+ Container ci_db Creating 
+ Container ci_db Created 
+ Container ci_web Creating 
+ Container ci_web Created 
+ Container ci_db Starting 
+ Container ci_db Started 
+ Container ci_db Waiting 
+ Container ci_db Healthy 
+ Container ci_web Starting 
+ Container ci_web Started 
