@@ -1,0 +1,15 @@
+# Variables de entorno con credenciales
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Sistema operativo
+.DS_Store
+
+# Logs
+*.log

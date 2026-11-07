@@ -1,0 +1,224 @@
+================================================================
+ EVIDENCIAS DE EJECUCION - ENTREGA 1 (SEMANA 3 / ESCENARIO 3)
+ Proyecto: Gestor de Tareas - Integracion Continua
+ Fecha de ejecucion: 2026-11-07 10:08:53 -05
+ Equipo anfitrion: Darwin arm64
+================================================================
+
+----------------------------------------------------------------
+EVIDENCIA 1. Version de Docker y Docker Compose
+----------------------------------------------------------------
+$ docker --version
+Docker version 29.7.2, build a7dcaa6fdb
+$ docker compose version
+Docker Compose version 5.5.0
+
+----------------------------------------------------------------
+EVIDENCIA 2. Construccion de las imagenes
+----------------------------------------------------------------
+$ docker images | grep -E 'entrega1|postgres'
+IMAGE                                      ID             DISK USAGE   CONTENT SIZE   EXTRA
+entrega1-integracion-continua-web:latest   808a0af0f161        268MB         58.9MB   U    
+postgres:16-alpine                         aa6cb33cf4c1        411MB          115MB   U    
+
+----------------------------------------------------------------
+EVIDENCIA 3. Los DOS contenedores en ejecucion
+----------------------------------------------------------------
+$ docker compose ps
+NAME      IMAGE                               COMMAND                  SERVICE   CREATED          STATUS                    PORTS
+ci_db     postgres:16-alpine                  "docker-entrypoint.s…"   db        18 seconds ago   Up 18 seconds (healthy)   5432/tcp
+ci_web    entrega1-integracion-continua-web   "gunicorn --bind 0.0…"   web       18 seconds ago   Up 12 seconds (healthy)   0.0.0.0:8080->5000/tcp, [::]:8080->5000/tcp
+
+$ docker ps --format 'table {{.Names}}	{{.Image}}	{{.Status}}	{{.Ports}}'
+NAMES     IMAGE                               STATUS                    PORTS
+ci_web    entrega1-integracion-continua-web   Up 12 seconds (healthy)   0.0.0.0:8080->5000/tcp, [::]:8080->5000/tcp
+ci_db     postgres:16-alpine                  Up 18 seconds (healthy)   5432/tcp
+
+----------------------------------------------------------------
+EVIDENCIA 4. Red compartida por los dos contenedores
+----------------------------------------------------------------
+$ docker network ls | grep red-ci
+b24872452656   entrega1-integracion-continua_red-ci   bridge    local
+
+$ docker network inspect entrega1-integracion-continua_red-ci  (contenedores conectados)
+ci_db -> 172.18.0.2/16
+ci_web -> 172.18.0.3/16
+
+
+----------------------------------------------------------------
+EVIDENCIA 5. Resolucion DNS: el contenedor web encuentra a 'db'
+----------------------------------------------------------------
+$ docker compose exec web getent hosts db
+172.18.0.2      db
+
+$ docker compose exec web python -c "socket.gethostbyname('db')"
+IP resuelta para db: 172.18.0.2
+
+----------------------------------------------------------------
+EVIDENCIA 6. Prueba de comunicacion: endpoint /health
+----------------------------------------------------------------
+$ curl -s http://localhost:8080/health
+{
+    "comunicacion_contenedores": "establecida",
+    "estado": "ok",
+    "host_base_datos": "db",
+    "motor": "PostgreSQL 16.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit"
+}
+
+----------------------------------------------------------------
+EVIDENCIA 7. Identificacion del servicio (GET /)
+----------------------------------------------------------------
+$ curl -s http://localhost:8080/
+{
+    "contenedor": "web (Flask)",
+    "endpoints": [
+        "/health",
+        "/api/tareas",
+        "/api/tareas/<id>"
+    ],
+    "se_conecta_a": "db:5432/tareasdb",
+    "servicio": "API Gestor de Tareas"
+}
+
+----------------------------------------------------------------
+EVIDENCIA 8. LECTURA: el contenedor web consulta datos del contenedor db
+----------------------------------------------------------------
+$ curl -s http://localhost:8080/api/tareas
+{
+    "tareas": [
+        {
+            "creada_en": "Sat, 07 Nov 2026 15:08:35 GMT",
+            "descripcion": "Inicializar el repositorio remoto del proyecto y definir ramas main y develop",
+            "estado": "completada",
+            "id": 1,
+            "responsable": "Equipo",
+            "titulo": "Crear repositorio en GitHub"
+        },
+        {
+            "creada_en": "Sat, 07 Nov 2026 15:08:35 GMT",
+            "descripcion": "Escribir el Dockerfile del servicio web en Flask",
+            "estado": "completada",
+            "id": 2,
+            "responsable": "Equipo",
+            "titulo": "Construir contenedor de aplicacion"
+        },
+        {
+            "creada_en": "Sat, 07 Nov 2026 15:08:35 GMT",
+            "descripcion": "Configurar la imagen de PostgreSQL y el script de inicializacion",
+            "estado": "completada",
+            "id": 3,
+            "responsable": "Equipo",
+            "titulo": "Construir contenedor de base de datos"
+        },
+        {
+            "creada_en": "Sat, 07 Nov 2026 15:08:35 GMT",
+            "descripcion": "Probar el endpoint /health y la consulta a la tabla tareas",
+            "estado": "en progreso",
+            "id": 4,
+            "responsable": "Equipo",
+            "titulo": "Verificar comunicacion entre contenedores"
+        },
+        {
+            "creada_en": "Sat, 07 Nov 2026 15:08:35 GMT",
+            "descripcion": "Documentar arquitectura, evidencias y conclusiones",
+            "estado": "pendiente",
+            "id": 5,
+            "responsable": "Equipo",
+            "titulo": "Preparar entrega de la semana 3"
+        }
+    ],
+    "total": 5
+}
+
+----------------------------------------------------------------
+EVIDENCIA 9. ESCRITURA: el contenedor web inserta en el contenedor db
+----------------------------------------------------------------
+$ curl -s http://localhost:8080/api/tareas -X POST -H 'Content-Type: application/json' --data '{...}'
+{
+    "creada_en": "Sat, 07 Nov 2026 15:09:21 GMT",
+    "descripcion": "Adjuntar capturas y documento en el aula virtual",
+    "estado": "pendiente",
+    "id": 6,
+    "responsable": "Equipo",
+    "titulo": "Entregar evidencias de la Semana 3"
+}
+
+----------------------------------------------------------------
+EVIDENCIA 10. Verificacion directa dentro del contenedor de base de datos
+----------------------------------------------------------------
+$ docker compose exec db psql -U ciuser -d tareasdb -c 'SELECT id,titulo,estado FROM tareas;'
+ id |                  titulo                   |   estado    
+----+-------------------------------------------+-------------
+  1 | Crear repositorio en GitHub               | completada
+  2 | Construir contenedor de aplicacion        | completada
+  3 | Construir contenedor de base de datos     | completada
+  4 | Verificar comunicacion entre contenedores | en progreso
+  5 | Preparar entrega de la semana 3           | pendiente
+  6 | Entregar evidencias de la Semana 3        | pendiente
+(6 rows)
+
+
+El registro insertado desde el contenedor web aparece en el contenedor de
+base de datos: la comunicacion bidireccional entre contenedores queda
+demostrada.
+
+----------------------------------------------------------------
+EVIDENCIA 11. Aislamiento: el contenedor db NO es accesible desde el host
+----------------------------------------------------------------
+El contenedor ci_db no publica el puerto 5432 hacia la maquina anfitriona.
+Solo el contenedor ci_web puede alcanzarlo, a traves de la red 'red-ci'.
+
+$ nc -z -w 2 localhost 5432   (desde el host)
+  -> conexion rechazada: el puerto 5432 no esta publicado (comportamiento esperado)
+
+$ docker compose exec web python   (prueba de socket TCP hacia db:5432 desde el contenedor web)
+  -> conexion TCP establecida con db:5432 desde el contenedor web
+
+----------------------------------------------------------------
+EVIDENCIA 12. Pruebas unitarias dentro del contenedor web
+----------------------------------------------------------------
+$ docker compose exec web python -m pytest tests/ -v
+============================= test session starts ==============================
+platform linux -- Python 3.12.16, pytest-8.2.2, pluggy-1.7.0 -- /usr/local/bin/python
+cachedir: .pytest_cache
+rootdir: /usr/src/app
+collecting ... collected 3 items
+
+tests/test_app.py::test_endpoint_inicio_responde PASSED                  [ 33%]
+tests/test_app.py::test_host_base_datos_es_el_servicio_docker PASSED     [ 66%]
+tests/test_app.py::test_crear_tarea_sin_titulo_devuelve_400 PASSED       [100%]
+
+============================== 3 passed in 0.07s ===============================
+
+----------------------------------------------------------------
+EVIDENCIA 13. Registros (logs) de los dos contenedores
+----------------------------------------------------------------
+$ docker compose logs --tail=10 db
+ci_db  | server stopped
+ci_db  | 
+ci_db  | PostgreSQL init process complete; ready for start up.
+ci_db  | 
+ci_db  | 2026-11-07 15:08:35.972 UTC [1] LOG:  starting PostgreSQL 16.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+ci_db  | 2026-11-07 15:08:35.972 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+ci_db  | 2026-11-07 15:08:35.972 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+ci_db  | 2026-11-07 15:08:35.975 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+ci_db  | 2026-11-07 15:08:35.977 UTC [58] LOG:  database system was shut down at 2026-11-07 15:08:35 UTC
+ci_db  | 2026-11-07 15:08:35.979 UTC [1] LOG:  database system is ready to accept connections
+
+$ docker compose logs --tail=12 web
+ci_web  | [2026-11-07 15:08:41 +0000] [1] [INFO] Using worker: sync
+ci_web  | [2026-11-07 15:08:41 +0000] [7] [INFO] Booting worker with pid: 7
+ci_web  | [2026-11-07 15:08:41 +0000] [8] [INFO] Booting worker with pid: 8
+ci_web  | 172.18.0.1 - - [07/Nov/2026:15:08:43 +0000] "GET /health HTTP/1.1" 200 186 "-" "curl/8.7.1"
+ci_web  | 127.0.0.1 - - [07/Nov/2026:15:08:45 +0000] "GET /health HTTP/1.1" 200 186 "-" "curl/8.14.1"
+ci_web  | 127.0.0.1 - - [07/Nov/2026:15:09:00 +0000] "GET /health HTTP/1.1" 200 186 "-" "curl/8.14.1"
+ci_web  | 172.18.0.1 - - [07/Nov/2026:15:09:13 +0000] "GET /health HTTP/1.1" 200 186 "-" "curl/8.7.1"
+ci_web  | 172.18.0.1 - - [07/Nov/2026:15:09:13 +0000] "GET / HTTP/1.1" 200 154 "-" "curl/8.7.1"
+ci_web  | 172.18.0.1 - - [07/Nov/2026:15:09:13 +0000] "GET /api/tareas HTTP/1.1" 200 1125 "-" "curl/8.7.1"
+ci_web  | 127.0.0.1 - - [07/Nov/2026:15:09:16 +0000] "GET /health HTTP/1.1" 200 186 "-" "curl/8.14.1"
+ci_web  | 172.18.0.1 - - [07/Nov/2026:15:09:21 +0000] "POST /api/tareas HTTP/1.1" 201 208 "-" "curl/8.7.1"
+ci_web  | 127.0.0.1 - - [07/Nov/2026:15:09:31 +0000] "GET /health HTTP/1.1" 200 186 "-" "curl/8.14.1"
+
+================================================================
+ FIN DE LAS EVIDENCIAS
+================================================================

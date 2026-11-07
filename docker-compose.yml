@@ -1,0 +1,66 @@
+# ============================================================================
+# Orquestacion de los DOS CONTENEDORES del proyecto
+#
+#   web  -> Contenedor 1: API REST en Flask (construido desde ./app)
+#   db   -> Contenedor 2: PostgreSQL 16 (imagen oficial)
+#
+# Ambos se conectan a la red definida por el usuario 'red-ci'. Docker provee
+# resolucion DNS interna dentro de esa red: el contenedor 'web' alcanza al
+# contenedor 'db' usando el nombre de servicio 'db' como nombre de host.
+# ============================================================================
+
+services:
+
+  # ---------------------------- CONTENEDOR 2 -------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: ci_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tareasdb}
+      POSTGRES_USER: ${DB_USER:-ciuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-cipassword}
+    volumes:
+      # Persistencia de los datos aunque se elimine el contenedor
+      - datos_postgres:/var/lib/postgresql/data
+      # Script que crea la tabla y carga los datos iniciales
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - red-ci
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-ciuser} -d ${DB_NAME:-tareasdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ---------------------------- CONTENEDOR 1 -------------------------------
+  web:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: ci_web
+    restart: unless-stopped
+    environment:
+      DB_HOST: db          # <-- nombre del servicio, resuelto por la red Docker
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-tareasdb}
+      DB_USER: ${DB_USER:-ciuser}
+      DB_PASSWORD: ${DB_PASSWORD:-cipassword}
+    ports:
+      # host:contenedor -> la API queda disponible en http://localhost:8080
+      - "8080:5000"
+    depends_on:
+      db:
+        condition: service_healthy   # el web arranca cuando la BD esta lista
+    networks:
+      - red-ci
+
+# Red propia del proyecto (aislada del resto de contenedores del host)
+networks:
+  red-ci:
+    driver: bridge
+
+# Volumen con nombre para la persistencia de PostgreSQL
+volumes:
+  datos_postgres:
